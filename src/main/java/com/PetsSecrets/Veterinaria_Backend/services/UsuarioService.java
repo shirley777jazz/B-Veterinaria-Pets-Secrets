@@ -30,13 +30,18 @@ public class UsuarioService {
             throw new RuntimeException("Error: El email ya está en uso!");
         }
         
+        // Determinar el rol (por defecto 'usuario' si no se especifica)
+        Usuario.Rol rolAsignado = registerRequest.getRol() != null 
+                ? registerRequest.getRol() 
+                : Usuario.Rol.usuario;
+        
         // Crear nuevo usuario
         Usuario usuario = Usuario.builder()
                 .nombreCompleto(registerRequest.getNombreCompleto())
                 .email(registerRequest.getEmail())
                 .telefono(registerRequest.getTelefono())
                 .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
-                .rol(Usuario.Rol.usuario)
+                .rol(rolAsignado)
                 .fechaRegistro(LocalDateTime.now())
                 .build();
         

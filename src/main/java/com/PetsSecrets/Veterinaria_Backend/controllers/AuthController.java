@@ -59,6 +59,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest signUpRequest) {
         try {
+            signUpRequest.setRol(Usuario.Rol.usuario);
             Usuario usuario = usuarioService.registrarUsuario(signUpRequest);
             
             return ResponseEntity.ok(new MessageResponse("Usuario registrado exitosamente!"));

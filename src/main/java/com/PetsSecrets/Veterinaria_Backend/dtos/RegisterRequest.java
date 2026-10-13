@@ -1,5 +1,6 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
+import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import lombok.Data;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,4 +25,6 @@ public class RegisterRequest {
     @NotBlank(message = "La contraseña es requerida")
     @Size(min = 6, max = 20, message = "La contraseña debe tener entre 6 y 20 caracteres")
     private String password;
+    
+    private Usuario.Rol rol = Usuario.Rol.usuario;
 }
