@@ -1,17 +1,13 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CarritoResponse {
     private Integer id;
@@ -20,4 +16,16 @@ public class CarritoResponse {
     private List<CarritoItemResponse> items;
     private BigDecimal total;
     private Integer totalItems;
+
+    public CarritoResponse() {
+    }
+
+    public CarritoResponse(Integer id, Integer usuarioId, LocalDateTime fechaCreacion, List<CarritoItemResponse> items, BigDecimal total, Integer totalItems) {
+        this.id = id;
+        this.usuarioId = usuarioId;
+        this.fechaCreacion = fechaCreacion;
+        this.items = items;
+        this.total = total;
+        this.totalItems = totalItems;
+    }
 }

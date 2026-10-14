@@ -5,15 +5,12 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "productos")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Producto {
 
@@ -29,15 +26,18 @@ public class Producto {
     @Column(nullable = false)
     private double precio;
 
+    @Builder.Default
     private Integer stock = 0;
 
     @Column(name = "imagen_url", length = 500)
     private String imagenUrl;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private EstadoProducto estado = EstadoProducto.activo;
 
     @Column(name = "fecha_creacion")
+    @Builder.Default
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,6 +48,25 @@ public class Producto {
     @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<PedidoDetalle> PedidosDetalles;
+
+    public Producto() {
+    }
+
+    public Producto(Integer id, String nombre, String descripcion, double precio,
+                    Integer stock, String imagenUrl, EstadoProducto estado,
+                    LocalDateTime fechaCreacion, Categoria categoria,
+                    List<PedidoDetalle> PedidosDetalles) {
+        this.id = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.stock = stock != null ? stock : 0;
+        this.imagenUrl = imagenUrl;
+        this.estado = estado != null ? estado : EstadoProducto.activo;
+        this.fechaCreacion = fechaCreacion != null ? fechaCreacion : LocalDateTime.now();
+        this.categoria = categoria;
+        this.PedidosDetalles = PedidosDetalles;
+    }
 
     public enum EstadoProducto {
         activo,

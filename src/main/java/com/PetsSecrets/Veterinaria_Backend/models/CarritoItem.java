@@ -2,18 +2,14 @@ package com.PetsSecrets.Veterinaria_Backend.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "carrito_items")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CarritoItem {
 
@@ -34,9 +30,20 @@ public class CarritoItem {
     private Integer cantidad;
 
     @Column(name = "precio_unitario", nullable = false)
-    private BigDecimal  precioUnitario;
+    private BigDecimal precioUnitario;
+
+    public CarritoItem() {
+    }
+
+    public CarritoItem(Integer id, Carrito carrito, Producto producto, Integer cantidad, BigDecimal precioUnitario) {
+        this.id = id;
+        this.carrito = carrito;
+        this.producto = producto;
+        this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
+    }
 
     public BigDecimal getSubtotal() {
-        return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+        return precioUnitario != null && cantidad != null ? precioUnitario.multiply(BigDecimal.valueOf(cantidad)) : BigDecimal.ZERO;
     }
 }

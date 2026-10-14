@@ -12,11 +12,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categorias")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CategoriaController(CategoriaService categoriaService) {
+        this.categoriaService = categoriaService;
+    }
 
     @GetMapping
     public ResponseEntity<List<CategoriaResponse>> obtenerTodasLasCategorias() {

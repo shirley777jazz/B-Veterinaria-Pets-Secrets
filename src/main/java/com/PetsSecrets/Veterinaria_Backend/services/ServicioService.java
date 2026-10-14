@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ServicioService {
 
     private final ServicioRepository servicioRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ServicioService(ServicioRepository servicioRepository) {
+        this.servicioRepository = servicioRepository;
+    }
 
     // Obtener todos los servicios activos como DTOs públicos
     public List<ServicioResponse> obtenerServiciosActivos() {

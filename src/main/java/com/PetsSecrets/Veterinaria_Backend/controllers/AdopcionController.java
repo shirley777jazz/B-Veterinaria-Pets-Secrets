@@ -5,13 +5,15 @@ import com.PetsSecrets.Veterinaria_Backend.dtos.AdopcionResponse;
 import com.PetsSecrets.Veterinaria_Backend.dtos.AdopcionUpdateRequest;
 import com.PetsSecrets.Veterinaria_Backend.dtos.MessageResponse;
 import com.PetsSecrets.Veterinaria_Backend.models.Adopcion;
+import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
 import com.PetsSecrets.Veterinaria_Backend.services.AdopcionService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -19,22 +21,24 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/adopciones")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AdopcionController {
 
     private final AdopcionService adopcionService;
     private final UsuarioRepository usuarioRepository;
 
+    @Autowired
+    public AdopcionController(AdopcionService adopcionService, UsuarioRepository usuarioRepository) {
+        this.adopcionService = adopcionService;
+        this.usuarioRepository = usuarioRepository;
+    }
+
     // Crear nueva solicitud de adopción (requiere autenticación)
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> crearSolicitudAdopcion(@Valid @RequestBody AdopcionRequest request,
-                                                   Authentication authentication) {
+    public ResponseEntity<?> crearSolicitudAdopcion(@Valid @RequestBody AdopcionRequest request) {
         try {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Integer usuarioId = getUserIdFromUserDetails(userDetails);
-            
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             AdopcionResponse adopcion = adopcionService.crearSolicitudAdopcion(request, usuarioId);
             return ResponseEntity.ok(adopcion);
         } catch (Exception e) {
@@ -54,28 +58,31 @@ public class AdopcionController {
     // Obtener mis solicitudes de adopción (requiere autenticación)
     @GetMapping("/mis-solicitudes")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<List<AdopcionResponse>> obtenerMisSolicitudes(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        Integer usuarioId = getUserIdFromUserDetails(userDetails);
-        
-        List<AdopcionResponse> adopciones = adopcionService.obtenerAdopcionesPorUsuario(usuarioId);
-        return ResponseEntity.ok(adopciones);
+    public ResponseEntity<?> obtenerMisSolicitudes() {
+        try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
+            List<AdopcionResponse> adopciones = adopcionService.obtenerAdopcionesPorUsuario(usuarioId);
+            return ResponseEntity.ok(adopciones);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Error al obtener solicitudes: " + e.getMessage()));
+        }
     }
 
     // Obtener adopción por ID
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> obtenerAdopcionPorId(@PathVariable Integer id,
-                                                 Authentication authentication) {
+    public ResponseEntity<?> obtenerAdopcionPorId(@PathVariable Integer id) {
         try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             AdopcionResponse adopcion = adopcionService.obtenerAdopcionPorId(id);
             
             // Verificar permisos: admin puede ver todas, usuario solo las suyas
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Integer usuarioId = getUserIdFromUserDetails(userDetails);
-            
-            if (!isAdmin(userDetails) && !adopcion.getUsuarioId().equals(usuarioId)) {
-                return ResponseEntity.badRequest()
+            if (!isAdmin() && !adopcion.getUsuarioId().equals(usuarioId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new MessageResponse("No tienes permisos para ver esta solicitud"));
             }
             
@@ -126,12 +133,9 @@ public class AdopcionController {
     // Cancelar solicitud (por el usuario solicitante)
     @PutMapping("/{id}/cancelar")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> cancelarSolicitud(@PathVariable Integer id,
-                                              Authentication authentication) {
+    public ResponseEntity<?> cancelarSolicitud(@PathVariable Integer id) {
         try {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Integer usuarioId = getUserIdFromUserDetails(userDetails);
-            
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             adopcionService.cancelarSolicitud(id, usuarioId);
             return ResponseEntity.ok(new MessageResponse("Solicitud cancelada exitosamente"));
         } catch (Exception e) {
@@ -143,13 +147,15 @@ public class AdopcionController {
     // Verificar si puede adoptar una mascota
     @GetMapping("/puede-adoptar/{mascotaId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> puedeAdoptar(@PathVariable Integer mascotaId,
-                                         Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        Integer usuarioId = getUserIdFromUserDetails(userDetails);
-        
-        boolean puedeAdoptar = adopcionService.puedeAdoptar(usuarioId, mascotaId);
-        return ResponseEntity.ok(new MessageResponse("Puede adoptar: " + puedeAdoptar));
+    public ResponseEntity<?> puedeAdoptar(@PathVariable Integer mascotaId) {
+        try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
+            boolean puedeAdoptar = adopcionService.puedeAdoptar(usuarioId, mascotaId);
+            return ResponseEntity.ok(new MessageResponse("Puede adoptar: " + puedeAdoptar));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error al verificar: " + e.getMessage()));
+        }
     }
 
     // Obtener estadísticas (solo admin)
@@ -161,29 +167,24 @@ public class AdopcionController {
     }
 
     // Método auxiliar para obtener el ID del usuario del token JWT
-    private Integer getUserIdFromUserDetails(UserDetails userDetails) {
-        return obtenerUsuarioIdDelToken();
-    }
-    
     private Integer obtenerUsuarioIdDelToken() {
-        Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             throw new RuntimeException("Usuario no autenticado");
         }
         
-        // El username en el token es el email del usuario
         String email = authentication.getName();
-        
-        // Buscar el usuario por email
-        com.PetsSecrets.Veterinaria_Backend.models.Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
         
         return usuario.getId();
     }
 
     // Método auxiliar para verificar si es admin
-    private boolean isAdmin(UserDetails userDetails) {
-        return userDetails.getAuthorities().stream()
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 }

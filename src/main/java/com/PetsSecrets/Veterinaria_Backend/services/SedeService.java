@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class SedeService {
 
     private final SedeRepository sedeRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SedeService(SedeRepository sedeRepository) {
+        this.sedeRepository = sedeRepository;
+    }
 
     // Obtener todas las sedes como DTOs públicas
     public List<SedeResponse> obtenerTodasLasSedes() {

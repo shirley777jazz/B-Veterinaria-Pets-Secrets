@@ -6,8 +6,6 @@ import lombok.*;
 @Entity
 @Table(name = "sedes")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Sede {
 
@@ -27,4 +25,15 @@ public class Sede {
 
     @Column(name = "ciudad")
     private String ciudad;
+
+    public Sede() {
+    }
+
+    public Sede(Integer id, String nombre, String direccion, String telefono, String ciudad) {
+        this.id = id;
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.telefono = telefono;
+        this.ciudad = ciudad;
+    }
 }

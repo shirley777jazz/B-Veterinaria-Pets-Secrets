@@ -12,11 +12,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CategoriaService(CategoriaRepository categoriaRepository) {
+        this.categoriaRepository = categoriaRepository;
+    }
 
     public List<CategoriaResponse> obtenerTodasLasCategorias() {
         return categoriaRepository.findAll().stream()

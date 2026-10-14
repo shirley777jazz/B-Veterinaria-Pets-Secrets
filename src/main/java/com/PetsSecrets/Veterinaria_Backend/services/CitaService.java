@@ -3,7 +3,6 @@ package com.PetsSecrets.Veterinaria_Backend.services;
 import com.PetsSecrets.Veterinaria_Backend.dtos.*;
 import com.PetsSecrets.Veterinaria_Backend.models.*;
 import com.PetsSecrets.Veterinaria_Backend.repositories.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class CitaService {
 
@@ -23,6 +21,19 @@ public class CitaService {
     private final MascotaRepository mascotaRepository;
     private final ServicioRepository servicioRepository;
     private final SedeRepository sedeRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CitaService(CitaRepository citaRepository,
+                       UsuarioRepository usuarioRepository,
+                       MascotaRepository mascotaRepository,
+                       ServicioRepository servicioRepository,
+                       SedeRepository sedeRepository) {
+        this.citaRepository = citaRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.mascotaRepository = mascotaRepository;
+        this.servicioRepository = servicioRepository;
+        this.sedeRepository = sedeRepository;
+    }
 
     // Crear nueva cita
     public CitaResponse crearCita(CitaRequest request, Integer usuarioId) {
@@ -168,7 +179,7 @@ public class CitaService {
         if (!cita.getUsuario().getId().equals(usuarioId)) {
             Usuario usuario = usuarioRepository.findById(usuarioId)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            if (!usuario.getRol().equals("ADMIN")) {
+            if (usuario.getRol() != Usuario.Rol.admin) {
                 throw new RuntimeException("No tienes permisos para reprogramar esta cita");
             }
         }
@@ -207,7 +218,7 @@ public class CitaService {
         if (!cita.getUsuario().getId().equals(usuarioId)) {
             Usuario usuario = usuarioRepository.findById(usuarioId)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            if (!usuario.getRol().equals("ADMIN")) {
+            if (usuario.getRol() != Usuario.Rol.admin) {
                 throw new RuntimeException("No tienes permisos para cancelar esta cita");
             }
         }
@@ -264,13 +275,55 @@ public class CitaService {
     }
 
     // Clase interna para estadísticas
-    @lombok.Data
-    @lombok.Builder
     public static class CitaEstadisticas {
         private Long totalCitas;
         private Long citasPendientes;
         private Long citasConfirmadas;
         private Long citasCompletadas;
         private Long citasCanceladas;
+
+        public CitaEstadisticas() {
+        }
+
+        public CitaEstadisticas(Long totalCitas, Long citasPendientes, Long citasConfirmadas, Long citasCompletadas, Long citasCanceladas) {
+            this.totalCitas = totalCitas;
+            this.citasPendientes = citasPendientes;
+            this.citasConfirmadas = citasConfirmadas;
+            this.citasCompletadas = citasCompletadas;
+            this.citasCanceladas = citasCanceladas;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public Long getTotalCitas() { return totalCitas; }
+        public void setTotalCitas(Long totalCitas) { this.totalCitas = totalCitas; }
+        public Long getCitasPendientes() { return citasPendientes; }
+        public void setCitasPendientes(Long citasPendientes) { this.citasPendientes = citasPendientes; }
+        public Long getCitasConfirmadas() { return citasConfirmadas; }
+        public void setCitasConfirmadas(Long citasConfirmadas) { this.citasConfirmadas = citasConfirmadas; }
+        public Long getCitasCompletadas() { return citasCompletadas; }
+        public void setCitasCompletadas(Long citasCompletadas) { this.citasCompletadas = citasCompletadas; }
+        public Long getCitasCanceladas() { return citasCanceladas; }
+        public void setCitasCanceladas(Long citasCanceladas) { this.citasCanceladas = citasCanceladas; }
+
+        public static class Builder {
+            private Long totalCitas;
+            private Long citasPendientes;
+            private Long citasConfirmadas;
+            private Long citasCompletadas;
+            private Long citasCanceladas;
+
+            public Builder totalCitas(Long totalCitas) { this.totalCitas = totalCitas; return this; }
+            public Builder citasPendientes(Long citasPendientes) { this.citasPendientes = citasPendientes; return this; }
+            public Builder citasConfirmadas(Long citasConfirmadas) { this.citasConfirmadas = citasConfirmadas; return this; }
+            public Builder citasCompletadas(Long citasCompletadas) { this.citasCompletadas = citasCompletadas; return this; }
+            public Builder citasCanceladas(Long citasCanceladas) { this.citasCanceladas = citasCanceladas; return this; }
+
+            public CitaEstadisticas build() {
+                return new CitaEstadisticas(totalCitas, citasPendientes, citasConfirmadas, citasCompletadas, citasCanceladas);
+            }
+        }
     }
 }

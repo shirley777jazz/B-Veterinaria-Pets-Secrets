@@ -7,8 +7,6 @@ import lombok.*;
 @Entity
 @Table(name = "servicios")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Servicio {
@@ -35,4 +33,16 @@ public class Servicio {
     @Column(name = "activo")
     @Builder.Default
     private Boolean activo = true;
+
+    public Servicio() {
+    }
+
+    public Servicio(Integer id, String nombre, String descripcion, Double precio, Veterinario veterinario, Boolean activo) {
+        this.id = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.veterinario = veterinario;
+        this.activo = activo != null ? activo : true;
+    }
 }

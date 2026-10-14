@@ -1,13 +1,9 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class ProductoRequest {
     private String nombre;
@@ -17,4 +13,17 @@ public class ProductoRequest {
     private String imagenUrl;
     private String estado;
     private Integer categoriaId;
+
+    public ProductoRequest() {
+    }
+
+    public ProductoRequest(String nombre, String descripcion, double precio, Integer stock, String imagenUrl, String estado, Integer categoriaId) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.stock = stock;
+        this.imagenUrl = imagenUrl;
+        this.estado = estado;
+        this.categoriaId = categoriaId;
+    }
 }

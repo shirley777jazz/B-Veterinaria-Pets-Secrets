@@ -2,7 +2,7 @@ package com.PetsSecrets.Veterinaria_Backend.controllers;
 
 import com.PetsSecrets.Veterinaria_Backend.dtos.ServicioResponse;
 import com.PetsSecrets.Veterinaria_Backend.services.ServicioService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,11 +10,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/servicios")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class ServicioController {
 
     private final ServicioService servicioService;
+
+    @Autowired
+    public ServicioController(ServicioService servicioService) {
+        this.servicioService = servicioService;
+    }
 
     // Obtener todos los servicios activos
     @GetMapping

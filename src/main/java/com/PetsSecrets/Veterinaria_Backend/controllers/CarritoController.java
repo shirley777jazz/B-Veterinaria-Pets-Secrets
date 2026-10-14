@@ -6,7 +6,7 @@ import com.PetsSecrets.Veterinaria_Backend.dtos.MessageResponse;
 import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
 import com.PetsSecrets.Veterinaria_Backend.services.CarritoService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,12 +14,17 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/carrito")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class CarritoController {
 
     private final CarritoService carritoService;
     private final UsuarioRepository usuarioRepository;
+
+    @Autowired
+    public CarritoController(CarritoService carritoService, UsuarioRepository usuarioRepository) {
+        this.carritoService = carritoService;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     // Endpoint de prueba para verificar autenticación
     @GetMapping("/test-auth")
@@ -171,13 +176,13 @@ public class CarritoController {
     private Integer obtenerUsuarioIdDelToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            return usuario.getId();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            throw new RuntimeException("Usuario no autenticado");
         }
         
-        throw new RuntimeException("Usuario no autenticado");
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+        return usuario.getId();
     }
 }

@@ -2,10 +2,8 @@ package com.PetsSecrets.Veterinaria_Backend.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,8 +12,6 @@ import java.util.List;
 @Entity
 @Table(name = "carritos")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Carrito {
 
@@ -35,4 +31,14 @@ public class Carrito {
     @JsonManagedReference
     @Builder.Default
     private List<CarritoItem> items = new ArrayList<>();
+
+    public Carrito() {
+    }
+
+    public Carrito(Integer id, Usuario usuario, LocalDateTime fechaCreacion, List<CarritoItem> items) {
+        this.id = id;
+        this.usuario = usuario;
+        this.fechaCreacion = fechaCreacion != null ? fechaCreacion : LocalDateTime.now();
+        this.items = items != null ? items : new ArrayList<>();
+    }
 }

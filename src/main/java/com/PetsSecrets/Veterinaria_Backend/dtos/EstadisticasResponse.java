@@ -1,13 +1,9 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class EstadisticasResponse {
     
@@ -30,4 +26,24 @@ public class EstadisticasResponse {
     // Estadísticas por período (para reportes con fechas)
     private String periodoInicio;
     private String periodoFin;
+
+    public EstadisticasResponse() {
+    }
+
+    public EstadisticasResponse(Long usuariosRegistrados, Long mascotasAdopcion, Long pedidosPendientes, Long citasHoy, Long productosStock, Double valorInventario, Long totalAdopciones, Long citasSemana, Long citasMes, Long pedidosCompletados, Long productosVendidos, Double ingresosTotales, String periodoInicio, String periodoFin) {
+        this.usuariosRegistrados = usuariosRegistrados;
+        this.mascotasAdopcion = mascotasAdopcion;
+        this.pedidosPendientes = pedidosPendientes;
+        this.citasHoy = citasHoy;
+        this.productosStock = productosStock;
+        this.valorInventario = valorInventario;
+        this.totalAdopciones = totalAdopciones;
+        this.citasSemana = citasSemana;
+        this.citasMes = citasMes;
+        this.pedidosCompletados = pedidosCompletados;
+        this.productosVendidos = productosVendidos;
+        this.ingresosTotales = ingresosTotales;
+        this.periodoInicio = periodoInicio;
+        this.periodoFin = periodoFin;
+    }
 }

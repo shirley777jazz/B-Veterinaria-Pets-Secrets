@@ -4,13 +4,15 @@ import com.PetsSecrets.Veterinaria_Backend.dtos.MascotaRequest;
 import com.PetsSecrets.Veterinaria_Backend.dtos.MascotaResponse;
 import com.PetsSecrets.Veterinaria_Backend.dtos.MessageResponse;
 import com.PetsSecrets.Veterinaria_Backend.models.Mascota;
+import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
 import com.PetsSecrets.Veterinaria_Backend.services.MascotaService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -18,22 +20,24 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/mascotas")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class MascotaController {
 
     private final MascotaService mascotaService;
     private final UsuarioRepository usuarioRepository;
 
+    @Autowired
+    public MascotaController(MascotaService mascotaService, UsuarioRepository usuarioRepository) {
+        this.mascotaService = mascotaService;
+        this.usuarioRepository = usuarioRepository;
+    }
+
     // Crear nueva mascota (requiere autenticación)
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> crearMascota(@Valid @RequestBody MascotaRequest request, 
-                                         Authentication authentication) {
+    public ResponseEntity<?> crearMascota(@Valid @RequestBody MascotaRequest request) {
         try {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Integer usuarioId = getUserIdFromUserDetails(userDetails);
-            
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             MascotaResponse mascota = mascotaService.crearMascota(request, usuarioId);
             return ResponseEntity.ok(mascota);
         } catch (Exception e) {
@@ -71,12 +75,18 @@ public class MascotaController {
     // Obtener mis mascotas (requiere autenticación)
     @GetMapping("/mis-mascotas")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<List<MascotaResponse>> obtenerMisMascotas(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        Integer usuarioId = getUserIdFromUserDetails(userDetails);
-        
-        List<MascotaResponse> mascotas = mascotaService.obtenerMascotasPorUsuario(usuarioId);
-        return ResponseEntity.ok(mascotas);
+    public ResponseEntity<?> obtenerMisMascotas() {
+        try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
+            List<MascotaResponse> mascotas = mascotaService.obtenerMascotasPorUsuario(usuarioId);
+            return ResponseEntity.ok(mascotas);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Error al obtener mascotas: " + e.getMessage()));
+        }
     }
 
     // Buscar mascotas por nombre
@@ -106,12 +116,9 @@ public class MascotaController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> actualizarMascota(@PathVariable Integer id,
-                                              @Valid @RequestBody MascotaRequest request,
-                                              Authentication authentication) {
+                                              @Valid @RequestBody MascotaRequest request) {
         try {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Integer usuarioId = getUserIdFromUserDetails(userDetails);
-            
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             MascotaResponse mascota = mascotaService.actualizarMascota(id, request, usuarioId);
             return ResponseEntity.ok(mascota);
         } catch (Exception e) {
@@ -137,12 +144,9 @@ public class MascotaController {
     // Eliminar mascota (soft delete - requiere ser propietario o admin)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> eliminarMascota(@PathVariable Integer id,
-                                           Authentication authentication) {
+    public ResponseEntity<?> eliminarMascota(@PathVariable Integer id) {
         try {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Integer usuarioId = getUserIdFromUserDetails(userDetails);
-            
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             mascotaService.eliminarMascota(id, usuarioId);
             return ResponseEntity.ok(new MessageResponse("Mascota eliminada exitosamente"));
         } catch (Exception e) {
@@ -160,21 +164,14 @@ public class MascotaController {
     }
 
     // Método auxiliar para obtener el ID del usuario del token JWT
-    private Integer getUserIdFromUserDetails(UserDetails userDetails) {
-        return obtenerUsuarioIdDelToken();
-    }
-    
     private Integer obtenerUsuarioIdDelToken() {
-        Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             throw new RuntimeException("Usuario no autenticado");
         }
         
-        // El username en el token es el email del usuario
         String email = authentication.getName();
-        
-        // Buscar el usuario por email
-        com.PetsSecrets.Veterinaria_Backend.models.Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
         
         return usuario.getId();

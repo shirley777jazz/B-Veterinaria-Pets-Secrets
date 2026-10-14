@@ -7,8 +7,6 @@ import lombok.*;
 @Entity
 @Table(name = "veterinarios")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Veterinario {
@@ -29,4 +27,15 @@ public class Veterinario {
 
     @Column(name = "email")
     private String email;
+
+    public Veterinario() {
+    }
+
+    public Veterinario(Integer id, String nombreCompleto, String especialidad, String telefono, String email) {
+        this.id = id;
+        this.nombreCompleto = nombreCompleto;
+        this.especialidad = especialidad;
+        this.telefono = telefono;
+        this.email = email;
+    }
 }

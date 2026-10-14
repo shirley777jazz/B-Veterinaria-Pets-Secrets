@@ -9,8 +9,6 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "mascotas")
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class Mascota {
     @Id
@@ -86,6 +84,37 @@ public class Mascota {
 
     @Builder.Default
     private Boolean activo = true;
+
+    public Mascota() {
+    }
+
+    public Mascota(Integer id, String nombre, Especie especie, String raza, Genero genero,
+                   Integer edad, Tamano tamano, String descripcion, String fotoUrl,
+                   Tipo tipo, EstadoAdopcion estadoAdopcion, Boolean vacunado,
+                   Boolean esterilizado, Boolean buenoConNinos, Boolean buenoConOtrasMascotas,
+                   LocalDate fechaIngreso, LocalDate fechaAdopcion, Usuario usuario,
+                   List<Adopcion> adopciones, Boolean activo) {
+        this.id = id;
+        this.nombre = nombre;
+        this.especie = especie;
+        this.raza = raza;
+        this.genero = genero;
+        this.edad = edad;
+        this.tamano = tamano;
+        this.descripcion = descripcion;
+        this.fotoUrl = fotoUrl;
+        this.tipo = tipo != null ? tipo : Tipo.propia;
+        this.estadoAdopcion = estadoAdopcion != null ? estadoAdopcion : EstadoAdopcion.disponible;
+        this.vacunado = vacunado != null ? vacunado : false;
+        this.esterilizado = esterilizado != null ? esterilizado : false;
+        this.buenoConNinos = buenoConNinos != null ? buenoConNinos : false;
+        this.buenoConOtrasMascotas = buenoConOtrasMascotas != null ? buenoConOtrasMascotas : false;
+        this.fechaIngreso = fechaIngreso;
+        this.fechaAdopcion = fechaAdopcion;
+        this.usuario = usuario;
+        this.adopciones = adopciones;
+        this.activo = activo != null ? activo : true;
+    }
 
     public enum Especie { perro, gato, conejo, ave, otro }
     public enum Genero { macho, hembra }

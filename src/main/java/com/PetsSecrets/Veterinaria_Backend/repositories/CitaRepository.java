@@ -42,7 +42,9 @@ public interface CitaRepository extends JpaRepository<Cita, Integer> {
     Long countByFecha(@Param("fecha") LocalDate fecha);
 
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.fecha BETWEEN :fechaInicio AND :fechaFin")
-    Long countCitasEntreFechas(@Param("fechaInicio") LocalDate fechaInicio, @Param("fechaFin") LocalDate fechaFin);    Long countByFechaBetween(LocalDate fechaInicio, LocalDate fechaFin);
+    Long countCitasEntreFechas(@Param("fechaInicio") LocalDate fechaInicio, @Param("fechaFin") LocalDate fechaFin);
+
+    Long countByFechaBetween(LocalDate fechaInicio, LocalDate fechaFin);
     
     // Buscar citas por fecha
     List<Cita> findByFechaOrderByHoraAsc(LocalDate fecha);

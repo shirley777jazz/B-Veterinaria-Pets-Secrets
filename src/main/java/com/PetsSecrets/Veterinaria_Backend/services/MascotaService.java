@@ -6,7 +6,6 @@ import com.PetsSecrets.Veterinaria_Backend.models.Mascota;
 import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import com.PetsSecrets.Veterinaria_Backend.repositories.MascotaRepository;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,12 +14,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class MascotaService {
 
     private final MascotaRepository mascotaRepository;
     private final UsuarioRepository usuarioRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public MascotaService(MascotaRepository mascotaRepository, UsuarioRepository usuarioRepository) {
+        this.mascotaRepository = mascotaRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     // Crear nueva mascota
     public MascotaResponse crearMascota(MascotaRequest request, Integer usuarioId) {
@@ -125,7 +129,7 @@ public class MascotaService {
         if (!mascota.getUsuario().getId().equals(usuarioId)) {
             Usuario usuario = usuarioRepository.findById(usuarioId)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            if (!usuario.getRol().name().equals("ADMIN")) {
+            if (usuario.getRol() != Usuario.Rol.admin) {
                 throw new RuntimeException("No tienes permisos para modificar esta mascota");
             }
         }
@@ -199,7 +203,7 @@ public class MascotaService {
         if (!mascota.getUsuario().getId().equals(usuarioId)) {
             Usuario usuario = usuarioRepository.findById(usuarioId)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            if (!usuario.getRol().name().equals("ADMIN")) {
+            if (usuario.getRol() != Usuario.Rol.admin) {
                 throw new RuntimeException("No tienes permisos para eliminar esta mascota");
             }
         }
@@ -226,13 +230,55 @@ public class MascotaService {
     }
 
     // Clase interna para estadísticas
-    @lombok.Data
-    @lombok.Builder
     public static class MascotaEstadisticas {
         private Long disponibles;
         private Long adoptadas;
         private Long enProceso;
         private Long noDisponibles;
         private Long total;
+
+        public MascotaEstadisticas() {
+        }
+
+        public MascotaEstadisticas(Long disponibles, Long adoptadas, Long enProceso, Long noDisponibles, Long total) {
+            this.disponibles = disponibles;
+            this.adoptadas = adoptadas;
+            this.enProceso = enProceso;
+            this.noDisponibles = noDisponibles;
+            this.total = total;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public Long getDisponibles() { return disponibles; }
+        public void setDisponibles(Long disponibles) { this.disponibles = disponibles; }
+        public Long getAdoptadas() { return adoptadas; }
+        public void setAdoptadas(Long adoptadas) { this.adoptadas = adoptadas; }
+        public Long getEnProceso() { return enProceso; }
+        public void setEnProceso(Long enProceso) { this.enProceso = enProceso; }
+        public Long getNoDisponibles() { return noDisponibles; }
+        public void setNoDisponibles(Long noDisponibles) { this.noDisponibles = noDisponibles; }
+        public Long getTotal() { return total; }
+        public void setTotal(Long total) { this.total = total; }
+
+        public static class Builder {
+            private Long disponibles;
+            private Long adoptadas;
+            private Long enProceso;
+            private Long noDisponibles;
+            private Long total;
+
+            public Builder disponibles(Long disponibles) { this.disponibles = disponibles; return this; }
+            public Builder adoptadas(Long adoptadas) { this.adoptadas = adoptadas; return this; }
+            public Builder enProceso(Long enProceso) { this.enProceso = enProceso; return this; }
+            public Builder noDisponibles(Long noDisponibles) { this.noDisponibles = noDisponibles; return this; }
+            public Builder total(Long total) { this.total = total; return this; }
+
+            public MascotaEstadisticas build() {
+                return new MascotaEstadisticas(disponibles, adoptadas, enProceso, noDisponibles, total);
+            }
+        }
     }
 }

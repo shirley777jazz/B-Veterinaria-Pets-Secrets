@@ -19,7 +19,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class PedidoService {
 
@@ -28,6 +27,19 @@ public class PedidoService {
     private final UsuarioRepository usuarioRepository;
     private final CarritoService carritoService;
     private final ProductoService productoService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public PedidoService(PedidoRepository pedidoRepository,
+                         PedidoDetalleRepository pedidoDetalleRepository,
+                         UsuarioRepository usuarioRepository,
+                         CarritoService carritoService,
+                         ProductoService productoService) {
+        this.pedidoRepository = pedidoRepository;
+        this.pedidoDetalleRepository = pedidoDetalleRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.carritoService = carritoService;
+        this.productoService = productoService;
+    }
 
     public List<PedidoResponse> obtenerTodosLosPedidos() {
         return pedidoRepository.findAllWithDetalles().stream()
@@ -137,7 +149,16 @@ public class PedidoService {
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
 
         try {
-            Pedido.EstadoPedido estado = Pedido.EstadoPedido.valueOf(nuevoEstado);
+            Pedido.EstadoPedido estado = null;
+            for (Pedido.EstadoPedido ep : Pedido.EstadoPedido.values()) {
+                if (ep.name().equalsIgnoreCase(nuevoEstado != null ? nuevoEstado.trim() : "")) {
+                    estado = ep;
+                    break;
+                }
+            }
+            if (estado == null) {
+                throw new RuntimeException("Estado de pedido inválido: " + nuevoEstado);
+            }
             pedido.setEstado(estado);
             Pedido pedidoActualizado = pedidoRepository.save(pedido);
             return convertirAPedidoResponse(pedidoActualizado);
@@ -148,7 +169,16 @@ public class PedidoService {
 
     public List<PedidoResponse> obtenerPedidosPorEstado(String estado) {
         try {
-            Pedido.EstadoPedido estadoEnum = Pedido.EstadoPedido.valueOf(estado);
+            Pedido.EstadoPedido estadoEnum = null;
+            for (Pedido.EstadoPedido ep : Pedido.EstadoPedido.values()) {
+                if (ep.name().equalsIgnoreCase(estado != null ? estado.trim() : "")) {
+                    estadoEnum = ep;
+                    break;
+                }
+            }
+            if (estadoEnum == null) {
+                throw new RuntimeException("Estado de pedido inválido: " + estado);
+            }
             return pedidoRepository.findByEstado(estadoEnum).stream()
                     .map(this::convertirAPedidoResponse)
                     .collect(Collectors.toList());
@@ -170,6 +200,27 @@ public class PedidoService {
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar fecha de entrega: " + e.getMessage());
         }
+    }
+
+    public PedidoResponse cancelarPedido(Integer id, Integer usuarioId) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
+
+        if (!pedido.getUsuario().getId().equals(usuarioId)) {
+            Usuario usuario = usuarioRepository.findById(usuarioId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            if (usuario.getRol() != Usuario.Rol.admin) {
+                throw new RuntimeException("No tienes permisos para cancelar este pedido");
+            }
+        }
+
+        if (pedido.getEstado() != Pedido.EstadoPedido.pendiente) {
+            throw new RuntimeException("Solo se pueden cancelar pedidos en estado pendiente");
+        }
+
+        pedido.setEstado(Pedido.EstadoPedido.cancelado);
+        Pedido pedidoActualizado = pedidoRepository.save(pedido);
+        return convertirAPedidoResponse(pedidoActualizado);
     }
 
     private String generarCodigoPedido() {

@@ -1,15 +1,11 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class ProductoResponse {
     private Integer id;
@@ -21,4 +17,19 @@ public class ProductoResponse {
     private String estado;
     private LocalDateTime fechaCreacion;
     private CategoriaResponse categoria;
+
+    public ProductoResponse() {
+    }
+
+    public ProductoResponse(Integer id, String nombre, String descripcion, double precio, Integer stock, String imagenUrl, String estado, LocalDateTime fechaCreacion, CategoriaResponse categoria) {
+        this.id = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.stock = stock;
+        this.imagenUrl = imagenUrl;
+        this.estado = estado;
+        this.fechaCreacion = fechaCreacion;
+        this.categoria = categoria;
+    }
 }

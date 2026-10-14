@@ -1,11 +1,8 @@
 package com.PetsSecrets.Veterinaria_Backend.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -14,8 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "citas")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Cita {
 
@@ -47,6 +42,7 @@ public class Cita {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private EstadoCita estado = EstadoCita.pendiente;
 
     private String notas;
@@ -54,6 +50,24 @@ public class Cita {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime fechaCreacion = LocalDateTime.now();
+
+    public Cita() {
+    }
+
+    public Cita(Integer id, Usuario usuario, Mascota mascota, Servicio servicio,
+                Sede sede, LocalDate fecha, LocalTime hora, EstadoCita estado,
+                String notas, LocalDateTime fechaCreacion) {
+        this.id = id;
+        this.usuario = usuario;
+        this.mascota = mascota;
+        this.servicio = servicio;
+        this.sede = sede;
+        this.fecha = fecha;
+        this.hora = hora;
+        this.estado = estado != null ? estado : EstadoCita.pendiente;
+        this.notas = notas;
+        this.fechaCreacion = fechaCreacion != null ? fechaCreacion : LocalDateTime.now();
+    }
 
     @PrePersist
     protected void onCreate() {

@@ -1,18 +1,14 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
 import com.PetsSecrets.Veterinaria_Backend.models.Cita;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CitaUpdateRequest {
     
@@ -26,4 +22,15 @@ public class CitaUpdateRequest {
     private String notas;
     
     private String comentarioAdmin;
+
+    public CitaUpdateRequest() {
+    }
+
+    public CitaUpdateRequest(Cita.EstadoCita estado, LocalDate fecha, LocalTime hora, String notas, String comentarioAdmin) {
+        this.estado = estado;
+        this.fecha = fecha;
+        this.hora = hora;
+        this.notas = notas;
+        this.comentarioAdmin = comentarioAdmin;
+    }
 }

@@ -11,8 +11,6 @@ import java.util.List;
 @Entity
 @Table(name = "pedidos")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Pedido {
 
@@ -29,16 +27,19 @@ public class Pedido {
     private Usuario usuario;
 
     @Column(name = "fecha_pedido", nullable = false, updatable = false)
+    @Builder.Default
     private LocalDateTime fechaPedido = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
+    @Builder.Default
     private EstadoPedido estado = EstadoPedido.pendiente;
 
     @Column(name = "subtotal", nullable = false)
     private BigDecimal subtotal;
 
     @Column(name = "envio", nullable = false)
+    @Builder.Default
     private BigDecimal envio = BigDecimal.ZERO;
 
     @Column(name = "total", nullable = false)
@@ -65,6 +66,30 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PedidoDetalle> detalles;
+
+    public Pedido() {
+    }
+
+    public Pedido(Integer id, String codigo, Usuario usuario, LocalDateTime fechaPedido,
+                  EstadoPedido estado, BigDecimal subtotal, BigDecimal envio, BigDecimal total,
+                  String direccion, String ciudad, String codigoPostal, String telefonoContacto,
+                  MetodoPago metodoPago, LocalDate fechaEntrega, List<PedidoDetalle> detalles) {
+        this.id = id;
+        this.codigo = codigo;
+        this.usuario = usuario;
+        this.fechaPedido = fechaPedido != null ? fechaPedido : LocalDateTime.now();
+        this.estado = estado != null ? estado : EstadoPedido.pendiente;
+        this.subtotal = subtotal;
+        this.envio = envio != null ? envio : BigDecimal.ZERO;
+        this.total = total;
+        this.direccion = direccion;
+        this.ciudad = ciudad;
+        this.codigoPostal = codigoPostal;
+        this.telefonoContacto = telefonoContacto;
+        this.metodoPago = metodoPago;
+        this.fechaEntrega = fechaEntrega;
+        this.detalles = detalles;
+    }
 
     public enum EstadoPedido {
         pendiente,procesando,enviado,entregado,cancelado

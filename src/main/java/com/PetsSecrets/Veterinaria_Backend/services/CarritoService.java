@@ -19,7 +19,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class CarritoService {
 
@@ -27,6 +26,17 @@ public class CarritoService {
     private final CarritoItemRepository carritoItemRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProductoService productoService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CarritoService(CarritoRepository carritoRepository,
+                          CarritoItemRepository carritoItemRepository,
+                          UsuarioRepository usuarioRepository,
+                          ProductoService productoService) {
+        this.carritoRepository = carritoRepository;
+        this.carritoItemRepository = carritoItemRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.productoService = productoService;
+    }
 
     public CarritoResponse obtenerCarritoPorUsuario(Integer usuarioId) {
         Optional<Carrito> carritoOpt = carritoRepository.findByUsuarioIdWithItems(usuarioId);

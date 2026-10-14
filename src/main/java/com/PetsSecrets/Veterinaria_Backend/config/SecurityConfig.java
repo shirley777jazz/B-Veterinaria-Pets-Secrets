@@ -20,10 +20,13 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     
     @Autowired
@@ -63,25 +66,40 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // CORS preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // Rutas públicas de autenticación y recursos
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
-                // Endpoints públicos de productos y categorías (solo lectura)
-                .requestMatchers("GET", "/api/productos/**").permitAll()
-                .requestMatchers("GET", "/api/categorias/**").permitAll()
-                // Endpoints públicos para servicios y sedes (para el formulario)
-                .requestMatchers("GET", "/api/servicios/**").permitAll()
-                .requestMatchers("GET", "/api/sedes/**").permitAll()
-                // Endpoints de administración (requieren autenticación)
-                .requestMatchers("POST", "/api/productos/**").authenticated()
-                .requestMatchers("PUT", "/api/productos/**").authenticated()
-                .requestMatchers("DELETE", "/api/productos/**").authenticated()
-                .requestMatchers("POST", "/api/categorias/**").authenticated()
-                .requestMatchers("PUT", "/api/categorias/**").authenticated()
-                .requestMatchers("DELETE", "/api/categorias/**").authenticated()
-                // Carrito requiere autenticación
-                .requestMatchers("/api/carrito/**").authenticated()
-                // Pedidos requieren autenticación
-                .requestMatchers("/api/pedidos/**").authenticated()
+                .requestMatchers("/uploads/**").permitAll()
+                
+                // Endpoints específicos de usuario autenticado (deben ir antes de patrones genéricos)
+                .requestMatchers("/api/mascotas/mis-mascotas").authenticated()
+                .requestMatchers("/api/citas/mis-citas", "/api/citas/proximas").authenticated()
+                .requestMatchers("/api/adopciones/mis-solicitudes").authenticated()
+                .requestMatchers("/api/pedidos/mis-pedidos", "/api/pedidos/usuario", "/api/pedidos/crear-desde-carrito").authenticated()
+                .requestMatchers("/api/carrito", "/api/carrito/**").authenticated()
+                
+                // Endpoints GET públicos para visualización de catálogo
+                .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/servicios", "/api/servicios/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/sedes", "/api/sedes/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/mascotas", "/api/mascotas/disponibles", "/api/mascotas/buscar", "/api/mascotas/filtrar", "/api/mascotas/{id}").permitAll()
+                
+                // Endpoints de administración y gestión (protegidos además con @PreAuthorize)
+                .requestMatchers("/api/estadisticas", "/api/estadisticas/**").authenticated()
+                .requestMatchers("/api/usuarios", "/api/usuarios/**").authenticated()
+                .requestMatchers("/api/pedidos", "/api/pedidos/**").authenticated()
+                .requestMatchers("/api/citas", "/api/citas/**").authenticated()
+                .requestMatchers("/api/adopciones", "/api/adopciones/**").authenticated()
+                
+                // Operaciones de modificación (POST, PUT, DELETE) requieren autenticación
+                .requestMatchers(HttpMethod.POST, "/api/productos/**", "/api/categorias/**", "/api/mascotas/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/productos/**", "/api/categorias/**", "/api/mascotas/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/productos/**", "/api/categorias/**", "/api/mascotas/**").authenticated()
+                
                 .anyRequest().permitAll()
             )
             .authenticationProvider(authenticationProvider())

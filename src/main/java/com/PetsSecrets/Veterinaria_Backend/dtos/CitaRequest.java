@@ -1,9 +1,7 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -17,8 +15,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class CitaRequest {
     
@@ -45,4 +41,16 @@ public class CitaRequest {
     private LocalTime hora;
     
     private String notas;
+
+    public CitaRequest() {
+    }
+
+    public CitaRequest(Integer mascotaId, Integer servicioId, Integer sedeId, LocalDate fecha, LocalTime hora, String notas) {
+        this.mascotaId = mascotaId;
+        this.servicioId = servicioId;
+        this.sedeId = sedeId;
+        this.fecha = fecha;
+        this.hora = hora;
+        this.notas = notas;
+    }
 }

@@ -9,7 +9,6 @@ import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import com.PetsSecrets.Veterinaria_Backend.repositories.AdopcionRepository;
 import com.PetsSecrets.Veterinaria_Backend.repositories.MascotaRepository;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class AdopcionService {
 
@@ -26,6 +24,17 @@ public class AdopcionService {
     private final MascotaRepository mascotaRepository;
     private final UsuarioRepository usuarioRepository;
     private final MascotaService mascotaService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AdopcionService(AdopcionRepository adopcionRepository,
+                           MascotaRepository mascotaRepository,
+                           UsuarioRepository usuarioRepository,
+                           MascotaService mascotaService) {
+        this.adopcionRepository = adopcionRepository;
+        this.mascotaRepository = mascotaRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.mascotaService = mascotaService;
+    }
 
     // Crear nueva solicitud de adopción
     public AdopcionResponse crearSolicitudAdopcion(AdopcionRequest request, Integer usuarioId) {
@@ -230,13 +239,55 @@ public class AdopcionService {
     }
 
     // Clase interna para estadísticas
-    @lombok.Data
-    @lombok.Builder
     public static class AdopcionEstadisticas {
         private Long pendientes;
         private Long aprobadas;
         private Long completadas;
         private Long rechazadas;
         private Long total;
+
+        public AdopcionEstadisticas() {
+        }
+
+        public AdopcionEstadisticas(Long pendientes, Long aprobadas, Long completadas, Long rechazadas, Long total) {
+            this.pendientes = pendientes;
+            this.aprobadas = aprobadas;
+            this.completadas = completadas;
+            this.rechazadas = rechazadas;
+            this.total = total;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public Long getPendientes() { return pendientes; }
+        public void setPendientes(Long pendientes) { this.pendientes = pendientes; }
+        public Long getAprobadas() { return aprobadas; }
+        public void setAprobadas(Long aprobadas) { this.aprobadas = aprobadas; }
+        public Long getCompletadas() { return completadas; }
+        public void setCompletadas(Long completadas) { this.completadas = completadas; }
+        public Long getRechazadas() { return rechazadas; }
+        public void setRechazadas(Long rechazadas) { this.rechazadas = rechazadas; }
+        public Long getTotal() { return total; }
+        public void setTotal(Long total) { this.total = total; }
+
+        public static class Builder {
+            private Long pendientes;
+            private Long aprobadas;
+            private Long completadas;
+            private Long rechazadas;
+            private Long total;
+
+            public Builder pendientes(Long pendientes) { this.pendientes = pendientes; return this; }
+            public Builder aprobadas(Long aprobadas) { this.aprobadas = aprobadas; return this; }
+            public Builder completadas(Long completadas) { this.completadas = completadas; return this; }
+            public Builder rechazadas(Long rechazadas) { this.rechazadas = rechazadas; return this; }
+            public Builder total(Long total) { this.total = total; return this; }
+
+            public AdopcionEstadisticas build() {
+                return new AdopcionEstadisticas(pendientes, aprobadas, completadas, rechazadas, total);
+            }
+        }
     }
 }

@@ -2,13 +2,17 @@ package com.PetsSecrets.Veterinaria_Backend.controllers;
 
 import com.PetsSecrets.Veterinaria_Backend.dtos.*;
 import com.PetsSecrets.Veterinaria_Backend.models.Cita;
+import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
+import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
 import com.PetsSecrets.Veterinaria_Backend.services.CitaService;
 import com.PetsSecrets.Veterinaria_Backend.services.UsuarioService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -18,21 +22,26 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/citas")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class CitaController {
 
     private final CitaService citaService;
     private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
+
+    @Autowired
+    public CitaController(CitaService citaService, UsuarioService usuarioService, UsuarioRepository usuarioRepository) {
+        this.citaService = citaService;
+        this.usuarioService = usuarioService;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     // Crear nueva cita
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> crearCita(@Valid @RequestBody CitaRequest request,
-                                      Authentication authentication) {
+    public ResponseEntity<?> crearCita(@Valid @RequestBody CitaRequest request) {
         try {
-            Integer usuarioId = usuarioService.buscarPorEmail(authentication.getName())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")).getId();
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             CitaResponse cita = citaService.crearCita(request, usuarioId);
             return ResponseEntity.ok(cita);
         } catch (Exception e) {
@@ -52,21 +61,35 @@ public class CitaController {
     // Obtener citas del usuario actual
     @GetMapping("/mis-citas")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<List<CitaResponse>> obtenerMisCitas(Authentication authentication) {
-        Integer usuarioId = usuarioService.buscarPorEmail(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado")).getId();
-        List<CitaResponse> citas = citaService.obtenerCitasPorUsuario(usuarioId);
-        return ResponseEntity.ok(citas);
+    public ResponseEntity<?> obtenerMisCitas() {
+        try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
+            List<CitaResponse> citas = citaService.obtenerCitasPorUsuario(usuarioId);
+            return ResponseEntity.ok(citas);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Error al obtener citas: " + e.getMessage()));
+        }
     }
 
     // Obtener citas próximas del usuario
     @GetMapping("/proximas")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<List<CitaResponse>> obtenerCitasProximas(Authentication authentication) {
-        Integer usuarioId = usuarioService.buscarPorEmail(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado")).getId();
-        List<CitaResponse> citas = citaService.obtenerCitasProximasUsuario(usuarioId);
-        return ResponseEntity.ok(citas);
+    public ResponseEntity<?> obtenerCitasProximas() {
+        try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
+            List<CitaResponse> citas = citaService.obtenerCitasProximasUsuario(usuarioId);
+            return ResponseEntity.ok(citas);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Error al obtener citas próximas: " + e.getMessage()));
+        }
     }
 
     // Obtener citas por estado (solo admin)
@@ -97,18 +120,14 @@ public class CitaController {
     // Obtener cita por ID
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> obtenerCitaPorId(@PathVariable Integer id,
-                                             Authentication authentication) {
+    public ResponseEntity<?> obtenerCitaPorId(@PathVariable Integer id) {
         try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
+            boolean admin = esAdmin();
             CitaResponse cita = citaService.obtenerCitaPorId(id);
             
-            // Verificar que la cita pertenece al usuario o que es admin
-            Integer usuarioId = usuarioService.buscarPorEmail(authentication.getName())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")).getId();
-            if (!cita.getUsuarioId().equals(usuarioId) && 
-                !authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-                return ResponseEntity.status(403)
+            if (!cita.getUsuarioId().equals(usuarioId) && !admin) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new MessageResponse("No tienes permisos para ver esta cita"));
             }
             
@@ -153,11 +172,9 @@ public class CitaController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> reprogramarCita(@PathVariable Integer id,
                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
-                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime hora,
-                                           Authentication authentication) {
+                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime hora) {
         try {
-            Integer usuarioId = usuarioService.buscarPorEmail(authentication.getName())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")).getId();
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             CitaResponse cita = citaService.reprogramarCita(id, fecha, hora, usuarioId);
             return ResponseEntity.ok(cita);
         } catch (Exception e) {
@@ -169,11 +186,9 @@ public class CitaController {
     // Cancelar cita
     @PutMapping("/{id}/cancelar")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> cancelarCita(@PathVariable Integer id,
-                                         Authentication authentication) {
+    public ResponseEntity<?> cancelarCita(@PathVariable Integer id) {
         try {
-            Integer usuarioId = usuarioService.buscarPorEmail(authentication.getName())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")).getId();
+            Integer usuarioId = obtenerUsuarioIdDelToken();
             citaService.cancelarCita(id, usuarioId);
             return ResponseEntity.ok(new MessageResponse("Cita cancelada exitosamente"));
         } catch (Exception e) {
@@ -200,6 +215,27 @@ public class CitaController {
     public ResponseEntity<CitaService.CitaEstadisticas> obtenerEstadisticas() {
         CitaService.CitaEstadisticas estadisticas = citaService.obtenerEstadisticas();
         return ResponseEntity.ok(estadisticas);
+    }
+
+    // Método auxiliar para obtener el ID del usuario del token JWT
+    private Integer obtenerUsuarioIdDelToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            throw new RuntimeException("Usuario no autenticado");
+        }
+        
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+        
+        return usuario.getId();
+    }
+
+    private boolean esAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     // Clase interna para respuesta de disponibilidad

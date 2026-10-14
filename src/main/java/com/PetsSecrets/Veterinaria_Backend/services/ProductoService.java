@@ -15,12 +15,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaService categoriaService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ProductoService(ProductoRepository productoRepository, CategoriaService categoriaService) {
+        this.productoRepository = productoRepository;
+        this.categoriaService = categoriaService;
+    }
 
     public List<ProductoResponse> obtenerTodosLosProductos() {
         return productoRepository.findAll().stream()

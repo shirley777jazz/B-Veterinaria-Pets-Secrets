@@ -1,16 +1,12 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import com.PetsSecrets.Veterinaria_Backend.models.Mascota;
 
 import java.time.LocalDate;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class MascotaResponse {
     
@@ -33,9 +29,41 @@ public class MascotaResponse {
     private LocalDate fechaAdopcion;
     private String usuarioNombre;
     private Integer usuarioId;
+
+    public MascotaResponse() {
+    }
+
+    public MascotaResponse(Integer id, String nombre, Mascota.Especie especie, String raza,
+                           Mascota.Genero genero, Integer edad, Mascota.Tamano tamano,
+                           String descripcion, String fotoUrl, Mascota.Tipo tipo,
+                           Mascota.EstadoAdopcion estadoAdopcion, Boolean vacunado,
+                           Boolean esterilizado, Boolean buenoConNinos,
+                           Boolean buenoConOtrasMascotas, LocalDate fechaIngreso,
+                           LocalDate fechaAdopcion, String usuarioNombre, Integer usuarioId) {
+        this.id = id;
+        this.nombre = nombre;
+        this.especie = especie;
+        this.raza = raza;
+        this.genero = genero;
+        this.edad = edad;
+        this.tamano = tamano;
+        this.descripcion = descripcion;
+        this.fotoUrl = fotoUrl;
+        this.tipo = tipo;
+        this.estadoAdopcion = estadoAdopcion;
+        this.vacunado = vacunado;
+        this.esterilizado = esterilizado;
+        this.buenoConNinos = buenoConNinos;
+        this.buenoConOtrasMascotas = buenoConOtrasMascotas;
+        this.fechaIngreso = fechaIngreso;
+        this.fechaAdopcion = fechaAdopcion;
+        this.usuarioNombre = usuarioNombre;
+        this.usuarioId = usuarioId;
+    }
     
     // Constructor estático para crear desde entidad
     public static MascotaResponse from(Mascota mascota) {
+        if (mascota == null) return null;
         return MascotaResponse.builder()
                 .id(mascota.getId())
                 .nombre(mascota.getNombre())
@@ -54,7 +82,7 @@ public class MascotaResponse {
                 .buenoConOtrasMascotas(mascota.getBuenoConOtrasMascotas())
                 .fechaIngreso(mascota.getFechaIngreso())
                 .fechaAdopcion(mascota.getFechaAdopcion())
-                .usuarioNombre(mascota.getUsuario() != null ? mascota.getUsuario().getNombre() : null)
+                .usuarioNombre(mascota.getUsuario() != null ? mascota.getUsuario().getNombreCompleto() : null)
                 .usuarioId(mascota.getUsuario() != null ? mascota.getUsuario().getId() : null)
                 .build();
     }

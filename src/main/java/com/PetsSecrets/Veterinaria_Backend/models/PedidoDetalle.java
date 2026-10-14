@@ -9,8 +9,6 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "pedido_detalles")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class PedidoDetalle {
 
@@ -35,4 +33,16 @@ public class PedidoDetalle {
 
     @Column(nullable = false)
     private BigDecimal subtotal;
+
+    public PedidoDetalle() {
+    }
+
+    public PedidoDetalle(Integer id, Pedido pedido, Producto producto, Integer cantidad, BigDecimal precioUnitario, BigDecimal subtotal) {
+        this.id = id;
+        this.pedido = pedido;
+        this.producto = producto;
+        this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
+        this.subtotal = subtotal;
+    }
 }

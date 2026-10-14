@@ -1,16 +1,12 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import com.PetsSecrets.Veterinaria_Backend.models.Adopcion;
 
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class AdopcionResponse {
     
@@ -35,19 +31,54 @@ public class AdopcionResponse {
     private String veterinarioReferencia;
     private Boolean aceptaCondiciones;
     private Boolean aceptaVisita;
+
+    public AdopcionResponse() {
+    }
+
+    public AdopcionResponse(Integer id, Integer usuarioId, String usuarioNombre, String usuarioEmail,
+                            Integer mascotaId, String mascotaNombre, String mascotaEspecie,
+                            String mascotaRaza, String mascotaFotoUrl, LocalDateTime fechaSolicitud,
+                            LocalDateTime fechaAprobacion, Adopcion.EstadoAdopcion estado,
+                            Adopcion.ExperienciaMascotas experienciaMascotas, Adopcion.TipoVivienda tipoVivienda,
+                            String otrasMascotas, String horarioTrabajo, String motivoAdopcion,
+                            String contactoEmergencia, String veterinarioReferencia,
+                            Boolean aceptaCondiciones, Boolean aceptaVisita) {
+        this.id = id;
+        this.usuarioId = usuarioId;
+        this.usuarioNombre = usuarioNombre;
+        this.usuarioEmail = usuarioEmail;
+        this.mascotaId = mascotaId;
+        this.mascotaNombre = mascotaNombre;
+        this.mascotaEspecie = mascotaEspecie;
+        this.mascotaRaza = mascotaRaza;
+        this.mascotaFotoUrl = mascotaFotoUrl;
+        this.fechaSolicitud = fechaSolicitud;
+        this.fechaAprobacion = fechaAprobacion;
+        this.estado = estado;
+        this.experienciaMascotas = experienciaMascotas;
+        this.tipoVivienda = tipoVivienda;
+        this.otrasMascotas = otrasMascotas;
+        this.horarioTrabajo = horarioTrabajo;
+        this.motivoAdopcion = motivoAdopcion;
+        this.contactoEmergencia = contactoEmergencia;
+        this.veterinarioReferencia = veterinarioReferencia;
+        this.aceptaCondiciones = aceptaCondiciones;
+        this.aceptaVisita = aceptaVisita;
+    }
     
     // Constructor estático para crear desde entidad
     public static AdopcionResponse from(Adopcion adopcion) {
+        if (adopcion == null) return null;
         return AdopcionResponse.builder()
                 .id(adopcion.getId())
-                .usuarioId(adopcion.getUsuario().getId())
-                .usuarioNombre(adopcion.getUsuario().getNombre())
-                .usuarioEmail(adopcion.getUsuario().getEmail())
-                .mascotaId(adopcion.getMascota().getId())
-                .mascotaNombre(adopcion.getMascota().getNombre())
-                .mascotaEspecie(adopcion.getMascota().getEspecie().name())
-                .mascotaRaza(adopcion.getMascota().getRaza())
-                .mascotaFotoUrl(adopcion.getMascota().getFotoUrl())
+                .usuarioId(adopcion.getUsuario() != null ? adopcion.getUsuario().getId() : null)
+                .usuarioNombre(adopcion.getUsuario() != null ? adopcion.getUsuario().getNombreCompleto() : null)
+                .usuarioEmail(adopcion.getUsuario() != null ? adopcion.getUsuario().getEmail() : null)
+                .mascotaId(adopcion.getMascota() != null ? adopcion.getMascota().getId() : null)
+                .mascotaNombre(adopcion.getMascota() != null ? adopcion.getMascota().getNombre() : null)
+                .mascotaEspecie(adopcion.getMascota() != null && adopcion.getMascota().getEspecie() != null ? adopcion.getMascota().getEspecie().name() : null)
+                .mascotaRaza(adopcion.getMascota() != null ? adopcion.getMascota().getRaza() : null)
+                .mascotaFotoUrl(adopcion.getMascota() != null ? adopcion.getMascota().getFotoUrl() : null)
                 .fechaSolicitud(adopcion.getFechaSolicitud())
                 .fechaAprobacion(adopcion.getFechaAprobacion())
                 .estado(adopcion.getEstado())

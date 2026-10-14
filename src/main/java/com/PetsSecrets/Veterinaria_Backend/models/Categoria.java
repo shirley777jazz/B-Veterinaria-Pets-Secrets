@@ -9,8 +9,6 @@ import java.util.List;
 @Entity
 @Table(name = "categorias")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Categoria {
 
@@ -26,4 +24,14 @@ public class Categoria {
     @OneToMany(mappedBy = "categoria", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Producto> productos;
+
+    public Categoria() {
+    }
+
+    public Categoria(Integer id, String nombre, String descripcion, List<Producto> productos) {
+        this.id = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.productos = productos;
+    }
 }

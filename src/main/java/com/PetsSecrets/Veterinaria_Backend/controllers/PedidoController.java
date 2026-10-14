@@ -6,7 +6,7 @@ import com.PetsSecrets.Veterinaria_Backend.dtos.PedidoResponse;
 import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
 import com.PetsSecrets.Veterinaria_Backend.services.PedidoService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,12 +16,17 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class PedidoController {
 
     private final PedidoService pedidoService;
     private final UsuarioRepository usuarioRepository;
+
+    @Autowired
+    public PedidoController(PedidoService pedidoService, UsuarioRepository usuarioRepository) {
+        this.pedidoService = pedidoService;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     @GetMapping
     public ResponseEntity<?> obtenerPedidos() {
@@ -34,7 +39,7 @@ public class PedidoController {
         }
     }
 
-    @GetMapping("/mis-pedidos")
+    @GetMapping({"/mis-pedidos", "/usuario"})
     public ResponseEntity<?> obtenerMisPedidos() {
         try {
             Integer usuarioId = obtenerUsuarioIdDelToken();
@@ -43,6 +48,17 @@ public class PedidoController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Error interno del servidor"));
+        }
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<?> obtenerPedidosPorUsuarioId(@PathVariable Integer usuarioId) {
+        try {
+            List<PedidoResponse> pedidos = pedidoService.obtenerPedidosPorUsuario(usuarioId);
+            return ResponseEntity.ok(pedidos);
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(new MessageResponse("Error interno del servidor"));
@@ -106,19 +122,49 @@ public class PedidoController {
 
     @PutMapping("/{id}/estado")
     public ResponseEntity<?> actualizarEstadoPedido(@PathVariable Integer id, 
-                                                   @RequestParam String estado) {
+                                                   @RequestParam(required = false) String estado,
+                                                   @RequestBody(required = false) java.util.Map<String, Object> body) {
         try {
-            PedidoResponse pedido = pedidoService.actualizarEstadoPedido(id, estado);
+            String nuevoEstado = estado;
+            if ((nuevoEstado == null || nuevoEstado.trim().isEmpty()) && body != null) {
+                if (body.get("estado") != null) {
+                    nuevoEstado = body.get("estado").toString();
+                } else if (body.get("nuevoEstado") != null) {
+                    nuevoEstado = body.get("nuevoEstado").toString();
+                }
+            }
+
+            if (nuevoEstado == null || nuevoEstado.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new MessageResponse("El parámetro estado es requerido"));
+            }
+
+            PedidoResponse pedido = pedidoService.actualizarEstadoPedido(id, nuevoEstado);
             return ResponseEntity.ok(pedido);
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("no encontrado")) {
+            if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
                 return ResponseEntity.notFound().build();
             }
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse(e.getMessage() != null ? e.getMessage() : "Error al actualizar estado"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Error interno del servidor"));
+        }
+    }
+
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelarPedido(@PathVariable Integer id) {
+        try {
+            Integer usuarioId = obtenerUsuarioIdDelToken();
+            PedidoResponse pedido = pedidoService.cancelarPedido(id, usuarioId);
+            return ResponseEntity.ok(pedido);
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .body(new MessageResponse("Error interno del servidor"));
+                    .body(new MessageResponse("Error al cancelar el pedido"));
         }
     }
 
@@ -129,7 +175,7 @@ public class PedidoController {
             return ResponseEntity.ok(pedidos);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
-                    .body(new MessageResponse(e.getMessage()));
+                    .body(new MessageResponse(e.getMessage() != null ? e.getMessage() : "Error al obtener pedidos"));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(new MessageResponse("Error interno del servidor"));
@@ -143,11 +189,11 @@ public class PedidoController {
             PedidoResponse pedido = pedidoService.actualizarFechaEntrega(id, fechaEntrega);
             return ResponseEntity.ok(pedido);
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("no encontrado")) {
+            if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
                 return ResponseEntity.notFound().build();
             }
             return ResponseEntity.badRequest()
-                    .body(new MessageResponse(e.getMessage()));
+                    .body(new MessageResponse(e.getMessage() != null ? e.getMessage() : "Error al actualizar fecha"));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(new MessageResponse("Error interno del servidor"));
@@ -157,7 +203,7 @@ public class PedidoController {
     // Método auxiliar para obtener el ID del usuario del token JWT
     private Integer obtenerUsuarioIdDelToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             throw new RuntimeException("Usuario no autenticado");
         }
         

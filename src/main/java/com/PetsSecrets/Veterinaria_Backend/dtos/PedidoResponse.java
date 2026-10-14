@@ -1,9 +1,7 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,8 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class PedidoResponse {
     private Integer id;
@@ -32,4 +28,27 @@ public class PedidoResponse {
     private String metodoPago;
     private LocalDate fechaEntrega;
     private List<PedidoDetalleResponse> detalles;
+
+    public PedidoResponse() {
+    }
+
+    public PedidoResponse(Integer id, String codigo, Integer usuarioId, String usuarioNombre, String usuarioEmail, LocalDateTime fechaPedido, String estado, BigDecimal subtotal, BigDecimal envio, BigDecimal total, String direccion, String ciudad, String codigoPostal, String telefonoContacto, String metodoPago, LocalDate fechaEntrega, List<PedidoDetalleResponse> detalles) {
+        this.id = id;
+        this.codigo = codigo;
+        this.usuarioId = usuarioId;
+        this.usuarioNombre = usuarioNombre;
+        this.usuarioEmail = usuarioEmail;
+        this.fechaPedido = fechaPedido;
+        this.estado = estado;
+        this.subtotal = subtotal;
+        this.envio = envio;
+        this.total = total;
+        this.direccion = direccion;
+        this.ciudad = ciudad;
+        this.codigoPostal = codigoPostal;
+        this.telefonoContacto = telefonoContacto;
+        this.metodoPago = metodoPago;
+        this.fechaEntrega = fechaEntrega;
+        this.detalles = detalles;
+    }
 }
