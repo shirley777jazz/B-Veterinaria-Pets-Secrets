@@ -60,8 +60,7 @@ public class ProductoService {
                 .precio(request.getPrecio())
                 .stock(request.getStock() != null ? request.getStock() : 0)
                 .imagenUrl(request.getImagenUrl())
-                .estado(Producto.EstadoProducto.valueOf(
-                    request.getEstado() != null ? request.getEstado() : "activo"))
+                .estado(parseEstado(request.getEstado()))
                 .fechaCreacion(LocalDateTime.now())
                 .categoria(categoria)
                 .build();
@@ -83,7 +82,7 @@ public class ProductoService {
         producto.setImagenUrl(request.getImagenUrl());
         
         if (request.getEstado() != null) {
-            producto.setEstado(Producto.EstadoProducto.valueOf(request.getEstado()));
+            producto.setEstado(parseEstado(request.getEstado()));
         }
         
         producto.setCategoria(categoria);
@@ -137,12 +136,19 @@ public class ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         
+        producto.setEstado(parseEstado(nuevoEstado));
+        Producto productoActualizado = productoRepository.save(producto);
+        return convertirAProductoResponse(productoActualizado);
+    }
+
+    private Producto.EstadoProducto parseEstado(String estado) {
+        if (estado == null || estado.trim().isEmpty()) {
+            return Producto.EstadoProducto.activo;
+        }
         try {
-            producto.setEstado(Producto.EstadoProducto.valueOf(nuevoEstado));
-            Producto productoActualizado = productoRepository.save(producto);
-            return convertirAProductoResponse(productoActualizado);
+            return Producto.EstadoProducto.valueOf(estado.trim().toLowerCase());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Estado no válido: " + nuevoEstado + ". Estados permitidos: activo, inactivo");
+            throw new RuntimeException("Estado no válido: " + estado + ". Estados permitidos: activo, inactivo");
         }
     }
 
