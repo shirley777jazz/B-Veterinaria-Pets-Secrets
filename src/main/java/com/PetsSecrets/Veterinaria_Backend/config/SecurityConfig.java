@@ -95,10 +95,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/citas", "/api/citas/**").authenticated()
                 .requestMatchers("/api/adopciones", "/api/adopciones/**").authenticated()
                 
-                // Operaciones de modificación (POST, PUT, DELETE) requieren autenticación
-                .requestMatchers(HttpMethod.POST, "/api/productos/**", "/api/categorias/**", "/api/mascotas/**").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/productos/**", "/api/categorias/**", "/api/mascotas/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/productos/**", "/api/categorias/**", "/api/mascotas/**").authenticated()
+                // Operaciones de modificación (POST, PUT, DELETE, PATCH) requieren autenticación
+                .requestMatchers(HttpMethod.POST, "/api/productos", "/api/productos/**", "/api/categorias", "/api/categorias/**", "/api/mascotas", "/api/mascotas/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/productos", "/api/productos/**", "/api/categorias", "/api/categorias/**", "/api/mascotas", "/api/mascotas/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/productos", "/api/productos/**", "/api/categorias", "/api/categorias/**", "/api/mascotas", "/api/mascotas/**").authenticated()
+                .requestMatchers(HttpMethod.PATCH, "/api/productos", "/api/productos/**").authenticated()
                 
                 .anyRequest().permitAll()
             )
