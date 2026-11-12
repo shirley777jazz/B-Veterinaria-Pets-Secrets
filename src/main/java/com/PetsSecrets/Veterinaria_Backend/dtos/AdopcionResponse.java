@@ -1,5 +1,6 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 import com.PetsSecrets.Veterinaria_Backend.models.Adopcion;
@@ -19,7 +20,9 @@ public class AdopcionResponse {
     private String mascotaEspecie;
     private String mascotaRaza;
     private String mascotaFotoUrl;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaSolicitud;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaAprobacion;
     private Adopcion.EstadoAdopcion estado;
     private Adopcion.ExperienciaMascotas experienciaMascotas;

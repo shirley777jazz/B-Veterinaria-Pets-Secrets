@@ -1,5 +1,6 @@
 package com.PetsSecrets.Veterinaria_Backend.dtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class PedidoResponse {
     private Integer usuarioId;
     private String usuarioNombre;
     private String usuarioEmail;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaPedido;
     private String estado;
     private BigDecimal subtotal;
@@ -26,6 +28,7 @@ public class PedidoResponse {
     private String codigoPostal;
     private String telefonoContacto;
     private String metodoPago;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaEntrega;
     private List<PedidoDetalleResponse> detalles;
 

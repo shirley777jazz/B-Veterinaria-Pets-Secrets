@@ -1,5 +1,6 @@
 package com.PetsSecrets.Veterinaria_Backend.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,6 +29,7 @@ public class Pedido {
 
     @Column(name = "fecha_pedido", nullable = false, updatable = false)
     @Builder.Default
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaPedido = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
@@ -62,6 +64,7 @@ public class Pedido {
     private MetodoPago metodoPago;
 
     @Column(name = "fecha_entrega")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaEntrega;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)

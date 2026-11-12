@@ -1,5 +1,6 @@
 package com.PetsSecrets.Veterinaria_Backend.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -26,9 +27,11 @@ public class Adopcion {
 
     @Column(name = "fecha_solicitud", nullable = false)
     @Builder.Default
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaSolicitud = LocalDateTime.now();
 
     @Column(name = "fecha_aprobacion")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaAprobacion;
 
     @Enumerated(EnumType.STRING)
