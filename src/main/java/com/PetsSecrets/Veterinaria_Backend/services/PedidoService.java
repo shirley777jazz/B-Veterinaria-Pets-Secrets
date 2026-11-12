@@ -6,6 +6,7 @@ import com.PetsSecrets.Veterinaria_Backend.dtos.PedidoResponse;
 import com.PetsSecrets.Veterinaria_Backend.models.*;
 import com.PetsSecrets.Veterinaria_Backend.repositories.PedidoRepository;
 import com.PetsSecrets.Veterinaria_Backend.repositories.PedidoDetalleRepository;
+import com.PetsSecrets.Veterinaria_Backend.repositories.ProductoRepository;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,18 +28,21 @@ public class PedidoService {
     private final UsuarioRepository usuarioRepository;
     private final CarritoService carritoService;
     private final ProductoService productoService;
+    private final ProductoRepository productoRepository;
 
     @org.springframework.beans.factory.annotation.Autowired
     public PedidoService(PedidoRepository pedidoRepository,
                          PedidoDetalleRepository pedidoDetalleRepository,
                          UsuarioRepository usuarioRepository,
                          CarritoService carritoService,
-                         ProductoService productoService) {
+                         ProductoService productoService,
+                         ProductoRepository productoRepository) {
         this.pedidoRepository = pedidoRepository;
         this.pedidoDetalleRepository = pedidoDetalleRepository;
         this.usuarioRepository = usuarioRepository;
         this.carritoService = carritoService;
         this.productoService = productoService;
+        this.productoRepository = productoRepository;
     }
 
     public List<PedidoResponse> obtenerTodosLosPedidos() {
@@ -78,12 +82,13 @@ public class PedidoService {
             throw new RuntimeException("El carrito está vacío");
         }
 
-        // Verificar stock disponible para todos los productos
+        // Verificar stock disponible para todos los productos directamente desde la BD
         for (CarritoItem item : carrito.getItems()) {
-            Producto producto = item.getProducto();
-            if (producto.getStock() < item.getCantidad()) {
-                throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombre() + 
-                                         ". Stock disponible: " + producto.getStock() + 
+            Producto prodDB = productoRepository.findById(item.getProducto().getId())
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + item.getProducto().getNombre()));
+            if (prodDB.getStock() < item.getCantidad()) {
+                throw new RuntimeException("Stock insuficiente para el producto: " + prodDB.getNombre() + 
+                                         ". Stock disponible: " + prodDB.getStock() + 
                                          ", cantidad solicitada: " + item.getCantidad());
             }
         }
@@ -115,7 +120,7 @@ public class PedidoService {
 
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
-        // Crear detalles del pedido y actualizar stock
+        // Crear detalles del pedido y descontar stock guardando en BD
         List<PedidoDetalle> detallesList = new ArrayList<>();
         for (CarritoItem item : carrito.getItems()) {
             PedidoDetalle detalle = PedidoDetalle.builder()
@@ -129,10 +134,11 @@ public class PedidoService {
             PedidoDetalle detalleGuardado = pedidoDetalleRepository.save(detalle);
             detallesList.add(detalleGuardado);
 
-            // Actualizar stock del producto
-            Producto producto = item.getProducto();
+            // Actualizar y guardar nuevo stock del producto en la base de datos
+            Producto producto = productoRepository.findById(item.getProducto().getId())
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + item.getProducto().getId()));
             producto.setStock(producto.getStock() - item.getCantidad());
-            productoService.obtenerProductoPorIdInterno(producto.getId()); // Para guardar cambios
+            productoRepository.save(producto);
         }
         
         // Asociar los detalles al pedido
@@ -145,7 +151,7 @@ public class PedidoService {
     }
 
     public PedidoResponse actualizarEstadoPedido(Integer id, String nuevoEstado) {
-        Pedido pedido = pedidoRepository.findById(id)
+        Pedido pedido = pedidoRepository.findByIdWithDetalles(id)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
 
         try {
@@ -159,6 +165,17 @@ public class PedidoService {
             if (estado == null) {
                 throw new RuntimeException("Estado de pedido inválido: " + nuevoEstado);
             }
+
+            Pedido.EstadoPedido estadoAnterior = pedido.getEstado();
+
+            // Si se cancela el pedido, restablecer el stock de los productos
+            if (estadoAnterior != Pedido.EstadoPedido.cancelado && estado == Pedido.EstadoPedido.cancelado) {
+                restaurarStockPedido(pedido);
+            } else if (estadoAnterior == Pedido.EstadoPedido.cancelado && estado != Pedido.EstadoPedido.cancelado) {
+                // Si se reactiva un pedido cancelado, volver a descontar el stock
+                descontarStockPedido(pedido);
+            }
+
             pedido.setEstado(estado);
             Pedido pedidoActualizado = pedidoRepository.save(pedido);
             return convertirAPedidoResponse(pedidoActualizado);
@@ -203,7 +220,7 @@ public class PedidoService {
     }
 
     public PedidoResponse cancelarPedido(Integer id, Integer usuarioId) {
-        Pedido pedido = pedidoRepository.findById(id)
+        Pedido pedido = pedidoRepository.findByIdWithDetalles(id)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
 
         if (!pedido.getUsuario().getId().equals(usuarioId)) {
@@ -218,9 +235,51 @@ public class PedidoService {
             throw new RuntimeException("Solo se pueden cancelar pedidos en estado pendiente");
         }
 
+        // Restablecer stock de los productos comprados si no estaba cancelado
+        if (pedido.getEstado() != Pedido.EstadoPedido.cancelado) {
+            restaurarStockPedido(pedido);
+        }
+
         pedido.setEstado(Pedido.EstadoPedido.cancelado);
         Pedido pedidoActualizado = pedidoRepository.save(pedido);
         return convertirAPedidoResponse(pedidoActualizado);
+    }
+
+    /**
+     * Restablece el stock de cada producto involucrado en el pedido cuando es cancelado.
+     */
+    private void restaurarStockPedido(Pedido pedido) {
+        if (pedido.getDetalles() != null) {
+            for (PedidoDetalle detalle : pedido.getDetalles()) {
+                if (detalle.getProducto() != null) {
+                    Producto prod = productoRepository.findById(detalle.getProducto().getId()).orElse(null);
+                    if (prod != null) {
+                        prod.setStock(prod.getStock() + detalle.getCantidad());
+                        productoRepository.save(prod);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Descuenta el stock si un pedido cancelado es reactivado.
+     */
+    private void descontarStockPedido(Pedido pedido) {
+        if (pedido.getDetalles() != null) {
+            for (PedidoDetalle detalle : pedido.getDetalles()) {
+                if (detalle.getProducto() != null) {
+                    Producto prod = productoRepository.findById(detalle.getProducto().getId()).orElse(null);
+                    if (prod != null) {
+                        if (prod.getStock() < detalle.getCantidad()) {
+                            throw new RuntimeException("Stock insuficiente para reactivar el pedido del producto: " + prod.getNombre());
+                        }
+                        prod.setStock(prod.getStock() - detalle.getCantidad());
+                        productoRepository.save(prod);
+                    }
+                }
+            }
+        }
     }
 
     private String generarCodigoPedido() {
