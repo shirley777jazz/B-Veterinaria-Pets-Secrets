@@ -78,6 +78,10 @@ public class Mascota {
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sede_id")
+    private Sede sede;
+
     // Relación con adopciones (una mascota puede tener muchas solicitudes de adopción)
     @OneToMany(mappedBy = "mascota", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Adopcion> adopciones;
@@ -92,7 +96,7 @@ public class Mascota {
                    Integer edad, Tamano tamano, String descripcion, String fotoUrl,
                    Tipo tipo, EstadoAdopcion estadoAdopcion, Boolean vacunado,
                    Boolean esterilizado, Boolean buenoConNinos, Boolean buenoConOtrasMascotas,
-                   LocalDate fechaIngreso, LocalDate fechaAdopcion, Usuario usuario,
+                   LocalDate fechaIngreso, LocalDate fechaAdopcion, Usuario usuario, Sede sede,
                    List<Adopcion> adopciones, Boolean activo) {
         this.id = id;
         this.nombre = nombre;
@@ -112,6 +116,7 @@ public class Mascota {
         this.fechaIngreso = fechaIngreso;
         this.fechaAdopcion = fechaAdopcion;
         this.usuario = usuario;
+        this.sede = sede;
         this.adopciones = adopciones;
         this.activo = activo != null ? activo : true;
     }

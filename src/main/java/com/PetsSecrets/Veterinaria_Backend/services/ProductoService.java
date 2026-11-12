@@ -3,6 +3,9 @@ package com.PetsSecrets.Veterinaria_Backend.services;
 import com.PetsSecrets.Veterinaria_Backend.dtos.CategoriaResponse;
 import com.PetsSecrets.Veterinaria_Backend.dtos.ProductoRequest;
 import com.PetsSecrets.Veterinaria_Backend.dtos.ProductoResponse;
+import com.PetsSecrets.Veterinaria_Backend.dtos.SedeResponse;
+import com.PetsSecrets.Veterinaria_Backend.models.Sede;
+import com.PetsSecrets.Veterinaria_Backend.repositories.SedeRepository;
 import com.PetsSecrets.Veterinaria_Backend.models.Categoria;
 import com.PetsSecrets.Veterinaria_Backend.models.Producto;
 import com.PetsSecrets.Veterinaria_Backend.repositories.ProductoRepository;
@@ -20,11 +23,13 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaService categoriaService;
+    private final SedeRepository sedeRepository;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public ProductoService(ProductoRepository productoRepository, CategoriaService categoriaService) {
+    public ProductoService(ProductoRepository productoRepository, CategoriaService categoriaService, SedeRepository sedeRepository) {
         this.productoRepository = productoRepository;
         this.categoriaService = categoriaService;
+        this.sedeRepository = sedeRepository;
     }
 
     public List<ProductoResponse> obtenerTodosLosProductos() {
@@ -53,6 +58,10 @@ public class ProductoService {
 
     public ProductoResponse crearProducto(ProductoRequest request) {
         Categoria categoria = categoriaService.obtenerCategoriaPorIdInterno(request.getCategoriaId());
+        Sede sede = null;
+        if (request.getSedeId() != null) {
+            sede = sedeRepository.findById(request.getSedeId()).orElse(null);
+        }
 
         Producto producto = Producto.builder()
                 .nombre(request.getNombre())
@@ -63,6 +72,7 @@ public class ProductoService {
                 .estado(parseEstado(request.getEstado()))
                 .fechaCreacion(LocalDateTime.now())
                 .categoria(categoria)
+                .sede(sede)
                 .build();
 
         Producto productoGuardado = productoRepository.save(producto);
@@ -86,6 +96,10 @@ public class ProductoService {
         }
         
         producto.setCategoria(categoria);
+        if (request.getSedeId() != null) {
+            Sede sede = sedeRepository.findById(request.getSedeId()).orElse(null);
+            producto.setSede(sede);
+        }
 
         Producto productoActualizado = productoRepository.save(producto);
         return convertirAProductoResponse(productoActualizado);
@@ -165,6 +179,8 @@ public class ProductoService {
                 .descripcion(producto.getCategoria().getDescripcion())
                 .build();
 
+        SedeResponse sedeResponse = producto.getSede() != null ? SedeResponse.from(producto.getSede()) : null;
+
         return ProductoResponse.builder()
                 .id(producto.getId())
                 .nombre(producto.getNombre())
@@ -175,6 +191,7 @@ public class ProductoService {
                 .estado(producto.getEstado().toString())
                 .fechaCreacion(producto.getFechaCreacion())
                 .categoria(categoriaResponse)
+                .sede(sedeResponse)
                 .build();
     }
 }

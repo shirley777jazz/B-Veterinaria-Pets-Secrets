@@ -42,6 +42,7 @@ public interface MascotaRepository extends JpaRepository<Mascota, Integer> {
            "AND (:tipo IS NULL OR m.tipo = :tipo) " +
            "AND (:vacunado IS NULL OR m.vacunado = :vacunado) " +
            "AND (:esterilizado IS NULL OR m.esterilizado = :esterilizado) " +
+           "AND (:sedeId IS NULL OR m.sede.id = :sedeId) " +
            "ORDER BY m.fechaIngreso DESC")
     List<Mascota> findMascotasConFiltros(
         @Param("especie") Mascota.Especie especie,
@@ -50,7 +51,8 @@ public interface MascotaRepository extends JpaRepository<Mascota, Integer> {
         @Param("estadoAdopcion") Mascota.EstadoAdopcion estadoAdopcion,
         @Param("tipo") Mascota.Tipo tipo,
         @Param("vacunado") Boolean vacunado,
-        @Param("esterilizado") Boolean esterilizado
+        @Param("esterilizado") Boolean esterilizado,
+        @Param("sedeId") Integer sedeId
     );
     
     // Contar mascotas por estado de adopción

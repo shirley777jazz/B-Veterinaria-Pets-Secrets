@@ -29,6 +29,8 @@ public class MascotaResponse {
     private LocalDate fechaAdopcion;
     private String usuarioNombre;
     private Integer usuarioId;
+    private Integer sedeId;
+    private String sedeNombre;
 
     public MascotaResponse() {
     }
@@ -39,7 +41,8 @@ public class MascotaResponse {
                            Mascota.EstadoAdopcion estadoAdopcion, Boolean vacunado,
                            Boolean esterilizado, Boolean buenoConNinos,
                            Boolean buenoConOtrasMascotas, LocalDate fechaIngreso,
-                           LocalDate fechaAdopcion, String usuarioNombre, Integer usuarioId) {
+                           LocalDate fechaAdopcion, String usuarioNombre, Integer usuarioId,
+                           Integer sedeId, String sedeNombre) {
         this.id = id;
         this.nombre = nombre;
         this.especie = especie;
@@ -59,6 +62,8 @@ public class MascotaResponse {
         this.fechaAdopcion = fechaAdopcion;
         this.usuarioNombre = usuarioNombre;
         this.usuarioId = usuarioId;
+        this.sedeId = sedeId;
+        this.sedeNombre = sedeNombre;
     }
     
     // Constructor estático para crear desde entidad
@@ -84,6 +89,8 @@ public class MascotaResponse {
                 .fechaAdopcion(mascota.getFechaAdopcion())
                 .usuarioNombre(mascota.getUsuario() != null ? mascota.getUsuario().getNombreCompleto() : null)
                 .usuarioId(mascota.getUsuario() != null ? mascota.getUsuario().getId() : null)
+                .sedeId(mascota.getSede() != null ? mascota.getSede().getId() : null)
+                .sedeNombre(mascota.getSede() != null ? mascota.getSede().getNombre() : null)
                 .build();
     }
 }

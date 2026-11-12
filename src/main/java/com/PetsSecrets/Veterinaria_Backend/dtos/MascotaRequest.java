@@ -22,6 +22,7 @@ public class MascotaRequest {
     private Boolean buenoConNinos;
     private Boolean buenoConOtrasMascotas;
     private String motivoAdopcion;
+    private Integer sedeId;
 
     public MascotaRequest() {
     }
@@ -30,7 +31,7 @@ public class MascotaRequest {
                           Mascota.Genero genero, Integer edad, Mascota.Tamano tamano,
                           String descripcion, String fotoUrl, Mascota.Tipo tipo,
                           Boolean vacunado, Boolean esterilizado, Boolean buenoConNinos,
-                          Boolean buenoConOtrasMascotas, String motivoAdopcion) {
+                          Boolean buenoConOtrasMascotas, String motivoAdopcion, Integer sedeId) {
         this.nombre = nombre;
         this.especie = especie;
         this.raza = raza;
@@ -45,5 +46,6 @@ public class MascotaRequest {
         this.buenoConNinos = buenoConNinos;
         this.buenoConOtrasMascotas = buenoConOtrasMascotas;
         this.motivoAdopcion = motivoAdopcion;
+        this.sedeId = sedeId;
     }
 }
