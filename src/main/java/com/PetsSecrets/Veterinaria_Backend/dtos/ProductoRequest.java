@@ -13,11 +13,12 @@ public class ProductoRequest {
     private String imagenUrl;
     private String estado;
     private Integer categoriaId;
+    private Integer sedeId;
 
     public ProductoRequest() {
     }
 
-    public ProductoRequest(String nombre, String descripcion, double precio, Integer stock, String imagenUrl, String estado, Integer categoriaId) {
+    public ProductoRequest(String nombre, String descripcion, double precio, Integer stock, String imagenUrl, String estado, Integer categoriaId, Integer sedeId) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
@@ -25,5 +26,6 @@ public class ProductoRequest {
         this.imagenUrl = imagenUrl;
         this.estado = estado;
         this.categoriaId = categoriaId;
+        this.sedeId = sedeId;
     }
 }

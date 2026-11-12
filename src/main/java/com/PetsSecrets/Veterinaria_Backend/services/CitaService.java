@@ -41,13 +41,16 @@ public class CitaService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Validar que la mascota existe y pertenece al usuario
+        // Validar que la mascota existe y pertenece al usuario (o si es admin permite agendarla para el dueño de la mascota)
         Mascota mascota = mascotaRepository.findById(request.getMascotaId())
                 .orElseThrow(() -> new RuntimeException("Mascota no encontrada"));
         
-        if (!mascota.getUsuario().getId().equals(usuarioId)) {
+        boolean esAdmin = usuario.getRol() == Usuario.Rol.admin;
+        if (!esAdmin && (mascota.getUsuario() == null || !mascota.getUsuario().getId().equals(usuarioId))) {
             throw new RuntimeException("La mascota no pertenece al usuario");
         }
+
+        Usuario usuarioCita = esAdmin && mascota.getUsuario() != null ? mascota.getUsuario() : usuario;
 
         // Validar que el servicio existe
         Servicio servicio = servicioRepository.findById(request.getServicioId())
@@ -70,7 +73,7 @@ public class CitaService {
 
         // Crear la cita
         Cita cita = Cita.builder()
-                .usuario(usuario)
+                .usuario(usuarioCita)
                 .mascota(mascota)
                 .servicio(servicio)
                 .sede(sede)

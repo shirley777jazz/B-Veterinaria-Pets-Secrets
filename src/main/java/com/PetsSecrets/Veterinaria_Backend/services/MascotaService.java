@@ -6,6 +6,8 @@ import com.PetsSecrets.Veterinaria_Backend.models.Mascota;
 import com.PetsSecrets.Veterinaria_Backend.models.Usuario;
 import com.PetsSecrets.Veterinaria_Backend.repositories.MascotaRepository;
 import com.PetsSecrets.Veterinaria_Backend.repositories.UsuarioRepository;
+import com.PetsSecrets.Veterinaria_Backend.models.Sede;
+import com.PetsSecrets.Veterinaria_Backend.repositories.SedeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,17 +21,24 @@ public class MascotaService {
 
     private final MascotaRepository mascotaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final SedeRepository sedeRepository;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public MascotaService(MascotaRepository mascotaRepository, UsuarioRepository usuarioRepository) {
+    public MascotaService(MascotaRepository mascotaRepository, UsuarioRepository usuarioRepository, SedeRepository sedeRepository) {
         this.mascotaRepository = mascotaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.sedeRepository = sedeRepository;
     }
 
     // Crear nueva mascota
     public MascotaResponse crearMascota(MascotaRequest request, Integer usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        Sede sede = null;
+        if (request.getSedeId() != null) {
+            sede = sedeRepository.findById(request.getSedeId()).orElse(null);
+        }
 
         Mascota mascota = Mascota.builder()
                 .nombre(request.getNombre())
@@ -50,6 +59,7 @@ public class MascotaService {
                     request.getBuenoConOtrasMascotas() : false)
                 .fechaIngreso(LocalDate.now())
                 .usuario(usuario)
+                .sede(sede)
                 .activo(true)
                 .build();
 
@@ -102,10 +112,11 @@ public class MascotaService {
             Mascota.EstadoAdopcion estadoAdopcion,
             Mascota.Tipo tipo,
             Boolean vacunado,
-            Boolean esterilizado) {
+            Boolean esterilizado,
+            Integer sedeId) {
         
         return mascotaRepository.findMascotasConFiltros(
-                especie, tamano, genero, estadoAdopcion, tipo, vacunado, esterilizado)
+                especie, tamano, genero, estadoAdopcion, tipo, vacunado, esterilizado, sedeId)
                 .stream()
                 .map(MascotaResponse::from)
                 .collect(Collectors.toList());
@@ -147,6 +158,10 @@ public class MascotaService {
         if (request.getEsterilizado() != null) mascota.setEsterilizado(request.getEsterilizado());
         if (request.getBuenoConNinos() != null) mascota.setBuenoConNinos(request.getBuenoConNinos());
         if (request.getBuenoConOtrasMascotas() != null) mascota.setBuenoConOtrasMascotas(request.getBuenoConOtrasMascotas());
+        if (request.getSedeId() != null) {
+            Sede sede = sedeRepository.findById(request.getSedeId()).orElse(null);
+            mascota.setSede(sede);
+        }
 
         Mascota mascotaActualizada = mascotaRepository.save(mascota);
         return MascotaResponse.from(mascotaActualizada);

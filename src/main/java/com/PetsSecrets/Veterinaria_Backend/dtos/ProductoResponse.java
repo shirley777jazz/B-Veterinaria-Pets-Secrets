@@ -17,11 +17,12 @@ public class ProductoResponse {
     private String estado;
     private LocalDateTime fechaCreacion;
     private CategoriaResponse categoria;
+    private SedeResponse sede;
 
     public ProductoResponse() {
     }
 
-    public ProductoResponse(Integer id, String nombre, String descripcion, double precio, Integer stock, String imagenUrl, String estado, LocalDateTime fechaCreacion, CategoriaResponse categoria) {
+    public ProductoResponse(Integer id, String nombre, String descripcion, double precio, Integer stock, String imagenUrl, String estado, LocalDateTime fechaCreacion, CategoriaResponse categoria, SedeResponse sede) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -31,5 +32,6 @@ public class ProductoResponse {
         this.estado = estado;
         this.fechaCreacion = fechaCreacion;
         this.categoria = categoria;
+        this.sede = sede;
     }
 }

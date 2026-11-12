@@ -105,10 +105,11 @@ public class MascotaController {
             @RequestParam(required = false) Mascota.EstadoAdopcion estadoAdopcion,
             @RequestParam(required = false) Mascota.Tipo tipo,
             @RequestParam(required = false) Boolean vacunado,
-            @RequestParam(required = false) Boolean esterilizado) {
+            @RequestParam(required = false) Boolean esterilizado,
+            @RequestParam(required = false) Integer sedeId) {
         
         List<MascotaResponse> mascotas = mascotaService.buscarMascotasConFiltros(
-                especie, tamano, genero, estadoAdopcion, tipo, vacunado, esterilizado);
+                especie, tamano, genero, estadoAdopcion, tipo, vacunado, esterilizado, sedeId);
         return ResponseEntity.ok(mascotas);
     }
 

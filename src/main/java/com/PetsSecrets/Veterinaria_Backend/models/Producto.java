@@ -45,6 +45,10 @@ public class Producto {
     @JsonBackReference
     private Categoria categoria;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sede_id")
+    private Sede sede;
+
     @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<PedidoDetalle> PedidosDetalles;
@@ -54,7 +58,7 @@ public class Producto {
 
     public Producto(Integer id, String nombre, String descripcion, double precio,
                     Integer stock, String imagenUrl, EstadoProducto estado,
-                    LocalDateTime fechaCreacion, Categoria categoria,
+                    LocalDateTime fechaCreacion, Categoria categoria, Sede sede,
                     List<PedidoDetalle> PedidosDetalles) {
         this.id = id;
         this.nombre = nombre;
@@ -65,6 +69,7 @@ public class Producto {
         this.estado = estado != null ? estado : EstadoProducto.activo;
         this.fechaCreacion = fechaCreacion != null ? fechaCreacion : LocalDateTime.now();
         this.categoria = categoria;
+        this.sede = sede;
         this.PedidosDetalles = PedidosDetalles;
     }
 
